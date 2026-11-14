@@ -1,0 +1,584 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>芽宝的歌单</title>
+    <style>
+        /* 基础设置 */
+        :root {
+            --theme-pink: #FFB6C1;
+            --theme-light-pink: #FFF0F5;
+            --theme-deep-pink: #FF69B4;
+            --text-color: #5C3A3A;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 20px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--theme-light-pink);
+            font-family: "Comic Sans MS", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* 顶部头图区域 */
+        .header-container {
+            position: relative;
+            width: 100%;
+            height: 750px; /* 稍微加高一点以适应图片标题 */
+            overflow: hidden;
+        }
+
+        .header-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 20%;
+        }
+
+        .header-gradient {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(to top, var(--theme-light-pink) 0%, rgba(255,240,245,0) 100%);
+        }
+
+        /* 标题与链接栏 */
+        .title-area {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* 替换后的图片标题 */
+        .title-img {
+            max-width: 60%;
+            max-height: 220px;
+            object-fit: contain;
+            margin-bottom: 20px;
+            /* 添加一点粉色光晕让图片融入背景 */
+            filter: drop-shadow(0px 4px 10px rgba(255, 105, 180, 0.5));
+        }
+
+        /* 链接容器 */
+        .link-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* 主播链接样式 */
+        .host-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 8px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.2);
+            text-decoration: none;
+            color: var(--theme-deep-pink);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            font-weight: bold;
+            height: 40px;
+            box-sizing: border-box;
+        }
+
+        .host-info:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4);
+            background: white;
+        }
+
+        .host-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--theme-pink);
+            object-fit: cover;
+            margin-right: 8px;
+        }
+
+        .host-name {
+            font-size: 16px;
+        }
+
+        /* 右侧无头像按钮特殊样式 */
+        .no-avatar {
+            padding: 8px 25px;
+        }
+
+        /* 主体内容区域 */
+        .main-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 20px 80px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 歌单网格布局 */
+        .song-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        /* 字母分组隔断标题 */
+        .group-title {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            margin: 30px 0 10px 0;
+            scroll-margin-top: 20px;
+        }
+
+        .group-title:first-child {
+            margin-top: 10px;
+        }
+
+        .group-title::before, .group-title::after {
+            content: '';
+            flex-grow: 1;
+            height: 3px;
+            background: linear-gradient(to right, transparent, var(--theme-pink));
+            border-radius: 3px;
+        }
+
+        .group-title::after {
+            background: linear-gradient(to left, transparent, var(--theme-pink));
+        }
+
+        .group-title .letter {
+            background: var(--theme-deep-pink);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 20px;
+            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.5);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* 单首歌曲卡片 */
+        .song-item {
+            background: white;
+            border-radius: 15px;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(255, 182, 193, 0.3);
+            transition: all 0.2s ease;
+            border: 1px solid #FFE4E1;
+        }
+
+        .song-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 105, 180, 0.4);
+            border-color: var(--theme-pink);
+        }
+
+        .song-name {
+            font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 10px;
+            flex-grow: 1;
+        }
+
+        /* 复制按钮 */
+        .copy-btn {
+            background: var(--theme-light-pink);
+            border: none;
+            border-radius: 8px;
+            color: var(--theme-deep-pink);
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background: var(--theme-deep-pink);
+            color: white;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 右侧悬浮字母导航 */
+        .alphabet-nav {
+            position: fixed;
+            right: 170px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 12px 6px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.5);
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .alphabet-nav a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .alphabet-nav a:hover, .alphabet-nav a.active {
+            background: var(--theme-deep-pink);
+            color: white;
+            transform: scale(1.15);
+        }
+
+        /* 复制成功提示 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(255, 105, 180, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* 两侧装饰图 */
+        .decorations {
+            position: fixed;
+            top: 0;
+            height: 100vh;
+            width: 150px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .decorations.left { left: 10px; }
+        .decorations.right { right: 10px; }
+
+        .deco-img {
+            position: absolute;
+            width: 120px;
+            animation: float 4s ease-in-out infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+
+        .deco-1 { top: 15%; left: 0; animation-delay: 0s; }
+        .deco-2 { top: 45%; left: 20px; animation-delay: 1s; }
+        .deco-3 { top: 75%; left: -10px; animation-delay: 2s; }
+        .deco-4 { top: 20%; right: 0; animation-delay: 0.5s; }
+        .deco-5 { top: 50%; right: 20px; animation-delay: 1.5s; }
+        .deco-6 { top: 80%; right: -10px; animation-delay: 2.5s; }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1300px) {
+            .alphabet-nav { right: 20px; }
+        }
+
+        @media (max-width: 1200px) {
+            .decorations { display: none; }
+            .main-content { padding: 20px 30px 80px 30px; }
+        }
+
+        @media (max-width: 768px) {
+            .header-container { height: 300px; }
+            .title-img { max-width: 80%; max-height: 80px; }
+            .song-list { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .alphabet-nav { display: none; }
+            .group-title .letter { width: 35px; height: 35px; font-size: 16px; margin: 0 10px; }
+            .link-container { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 两侧装饰图 -->
+    <div class="decorations left">
+        <img src="1.png" class="deco-img deco-1" alt="装饰">
+        <img src="2.png" class="deco-img deco-2" alt="装饰">
+        <img src="3.png" class="deco-img deco-3" alt="装饰">
+    </div>
+    
+    <div class="decorations right">
+        <img src="4.png" class="deco-img deco-4" alt="装饰">
+        <img src="5.png" class="deco-img deco-5" alt="装饰">
+        <img src="6.png" class="deco-img deco-6" alt="装饰">
+    </div>
+
+    <!-- 顶部区域 -->
+    <header class="header-container">
+        <img src="mainpic.png" class="header-img" alt="芽宝的头图">
+        <div class="header-gradient"></div>
+        
+        <div class="title-area">
+            <!-- 使用图片作为标题，请确保同目录下有 标题.png -->
+            <img src="title2.png" class="title-img" alt="芽宝的歌单">
+            
+            <div class="link-container">
+                <!-- 左侧链接：带头像 -->
+                <a href="https://space.bilibili.com/3493113930714082" target="_blank" class="host-info">
+                    <img src="profile.png" class="host-avatar" alt="小藤夏的头像">
+                    <span class="host-name">小藤夏的bilibili主页</span>
+                </a>
+                <!-- 右侧链接：无头像 -->
+                <a href="https://live.bilibili.com/30752590" target="_blank" class="host-info no-avatar">
+                    <span class="host-name">    小藤夏的bilibili直播间⭐    </span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 悬浮字母导航 -->
+    <nav class="alphabet-nav" id="alphabetNav">
+        <!-- 由 JS 动态生成 -->
+    </nav>
+
+    <!-- 主体歌单区域 -->
+    <main class="main-content">
+        <div class="song-list" id="songList">
+            <!-- 歌曲由 JS 动态生成 -->
+        </div>
+    </main>
+
+    <!-- 复制成功提示框 -->
+    <div class="toast" id="toast">复制成功啦~</div>
+
+    <script>
+        // 原始歌单文本数据
+        const rawData = `
+        爱丫爱丫 爱的供养 爱如潮水 爱的魔法 爱人呢 爱的华尔兹 爱情闯进门 爱的双重魔力 阿楚姑娘 阿拉斯加海湾 安娜的橱窗 黯然销魂 暗涌 爱你 爱•存在 爱上你 熬夜上瘾
+        不老梦 玻璃糖 半壶纱 不负人间 别找我麻烦 不知所措 不该 不怕 被驯服的象 不谓侠 白骨哀 白石溪 百年身 不完美女孩 不要说话 不朽之罪 不过问 百万个吻 不够成熟 笨的可以
+        纯白 藏 处处D 处处傻 春不渡 春风吹 错位时空 蠢货 长安忆 春日酒 曾经的约定 吹灭小山河 吹梦到西洲 此生与你，不过相逢 春意红包 成全 匆匆那年 采薇 传说的世界 超级敏感 吵架歌 错的人 猜不透 残酷月光
+        大喜 DNA 等你下课 带我离开 大鱼 当你 冬眠 大眠 倒带 东西 多远都要在一起 Don't go away 第二杯半价 东京不太热 大鱼 东流 东风志 多情种 多情岸 盗将行 打错了 第三人称 当时的我们 第一次爱的人 丹青客
+        恶作剧
+        房间 翻花绳 腐草为萤 飞鸟和蝉 分手快乐 繁华唱遍 浮生未歇 反方向的钟 发如雪 粉红色的回忆 发呆 风吹麦浪
+        光 告白 过火 皈依搁浅 关键词 隔世信 告白文案 告白气球 故梦 干物妹小埋（中文版） 干物女WEIWEI 广寒宫 勾指起誓 光年之外 国境四方 刚好遇见你 该忘了
+        画 红装 花海 红豆 黑猫 坏女孩 海芋恋 海棠 花 会呼吸的痛 红叶寺 红尘客栈 化身孤岛的鲸 画心 忽然之间 后来 红昭愿 环游星空 海海海 花的嫁纱 红颜旧 好想你 好想爱这个世界啊 红玫瑰 呼吸决定 红色高跟鞋 花枝春野 何日重到苏澜桥 还是你的笑容最可爱 红梅白雪知 后继者 黄昏晓 航向你的海岛 何必诗债换酒钱
+        茧 江山雪 渐冷 酒醉的蝴蝶 借过 九万字 惊鸿一面 九张机 锦鲤抄 君临天下 寄明月 见爱响铃 就这样吗 今夜，果实成熟了
+        可惜不是你 可惜没如果 空空如也 快乐崇拜 空山新雨后 卡路里 客官不可以 开始懂了
+        笼 绿色 兰亭序 恋爱画板 恋爱告急 恋爱裁判 琉璃月 恋爱练习题 旅行的意义 淋雨一直走 恋爱困难少女 临水照花 轮回之境 旅客 恋爱吧魔法少女 浪漫爱 落霞云归 路过人间 Letting go
+        芒种 迷人的危险 梦回还 明月天涯 迷迭香 眉间雪 满月已霜 漫步在岁月洪流 满天星辰不及你 明天，你好 美人鱼 梦里花 慢冷
+        暖暖 难却 那么骄傲 那年 你曾是少年 你并不懂我 你不是真正的快乐 你一定要幸福 年轮 牛奶香槟 拿走了什么 女儿情 那女孩对我说 那些花儿 你给我听好 你有没有见过他 你就不要想起我 那些你很冒险的梦 你不能爱我 你眸中有一个宇宙 你的眼睛像星星 你在不在 霓虹甜心 你的微笑
+        欧若拉
+        破茧 泡沫 泼墨漓江 漂洋过海来看你 陪你看星星 平安奇妙物语
+        青柠 起风了 亲爱的那并不是爱情 牵丝戏 情歌 去追一只鹿 青花瓷 奇妙能力歌 千梦 七秒钟的记忆 前男友的一百种死法 青灯 青城山下白素贞 芊芊 千古 青白 青蛇 千里邀月 青鸟衔风 恰雪来故 恰似你的温柔 千年之恋
+        如果的事 如果当时 如见青山 人间不值得 人质 如果有来生 如果你也听说 日不落 热爱105°C的你 RingRingRing 任由爱 让风告诉你 如愿 人间
+        溯 素颜 水星记 三行情诗 山有木兮 神的随波逐流 四季予你 苏公堤 霜雪千年 食色 参商 三苦生 是风动 岁月神偷 沈园外 身骑白马 苏州河 说客 山外小楼夜听雨 私奔到月球 石楠小札 说散就散 世界美好与你环环相扣 山鬼 三寸天堂 善变 岁月成碑 时间煮雨 世末歌者 说客 撒野 说爱你 世界上的另一个我 少女作妖日记 双抛桥 司花令 世界这么大还是遇见你 山止川行 杀破狼 Superstar 失落沙洲
+        体面 他和她 她说 童话镇 天地缓缓 棠梨煎雪 天后 叹云兮 桃花笑 天命风流 同道殊途 探窗 提灯照河山 突然想起你 突然好想你 天黑黑 童话镇 太聪明
+        微微 无限少女 我们的爱 我很快乐 我要我们在一起 我要你 往后余生 我好像掉进了爱情海里 我知道 我只在乎你 我唱情歌给你听 我怀念的 我们快出发 我的一个道姑朋友 我爱他 我太笨 万有引力 我的未来式 我可以忘记你 我多喜欢你你会知道 无人之岛 外婆桥 我的悲伤是水做的 为你我受冷风吹 我的猫狂奔了一整夜 晚夜微雨问海棠 我喜欢上你时的内心活动 我也很想他 危险派对
+        夏天的风 想想念念 小幸运 修炼爱情 小情歌 心墙 小小 想要你在身边 小城谣 相思 下山 杏花弦外雨 小丑的品格 星之所在 下雨天 昔言 兄妹 晓秋月明 寻常歌 小城夏天 星光降落 笑忘书 叙世 夕山谣 星光派对
+        雨爱 遇到 云与海 遇萤 烟雨行舟 夜宴风波 予君书 遇梦记 杨花落尽子规啼 雨爱 疑心病 夜车 影子 永不失联的爱 隐形的翅膀 勇气 云烟成雨 演员 一笑倾城 原谅 易燃易爆炸 鱼(陈绮贞) 月牙湾 樱花草 樱花树 有点甜 123我爱你 因为爱情 一个像夏天一个像秋天 鱼玄机 一首想不通的古风 一身诗意千寻瀑 遗失的美好 一直很安静 有何不可 有美人兮 一眼万年 野子 夜航星 一样爱着你 一人留 月光润色女孩 页脚情书 雨樱花
+        走马 追光者 知否知否 最好的我们 只对你有感觉 最后一页 左手 左边 走在冷风中 最初的梦想 最熟悉的陌生人 择日疯 造梦者 昨日青空 致你 36.5°C 9420 痒 学猫叫 扇子舞 百变奶精 小野猫 九九八十一 孽海记 赤伶 苏幕遮 我会自己上厕所 百万个吻 帮主夫人 spade
+        `;
+
+        // 获取中文字符串拼音首字母
+        function getFirstLetter(str) {
+            const char = str.charAt(0).toUpperCase();
+            if (/[A-Z]/.test(char)) return char;
+            if (/[0-9]/.test(char)) return '#';
+
+            const boundaries = [
+                { letter: 'A', char: '阿' }, { letter: 'B', char: '八' }, { letter: 'C', char: '擦' },
+                { letter: 'D', char: '搭' }, { letter: 'E', char: '蛾' }, { letter: 'F', char: '发' },
+                { letter: 'G', char: '噶' }, { letter: 'H', char: '哈' }, { letter: 'J', char: '击' },
+                { letter: 'K', char: '喀' }, { letter: 'L', char: '垃' }, { letter: 'M', char: '妈' },
+                { letter: 'N', char: '拿' }, { letter: 'O', char: '哦' }, { letter: 'P', char: '啪' },
+                { letter: 'Q', char: '期' }, { letter: 'R', char: '然' }, { letter: 'S', char: '撒' },
+                { letter: 'T', char: '塌' }, { letter: 'W', char: '挖' }, { letter: 'X', char: '昔' },
+                { letter: 'Y', char: '压' }, { letter: 'Z', char: '匝' }
+            ];
+
+            for (let i = boundaries.length - 1; i >= 0; i--) {
+                if (char.localeCompare(boundaries[i].char, 'zh-CN') >= 0) {
+                    return boundaries[i].letter;
+                }
+            }
+            return '#';
+        }
+
+        // 处理数据
+        function processSongs(text) {
+            let songs = text.split(/[\s\n]+/).filter(song => song.trim() !== '');
+            songs = [...new Set(songs)];
+            songs.sort((a, b) => a.localeCompare(b, 'zh-CN'));
+            
+            const grouped = {};
+            songs.forEach(song => {
+                const letter = getFirstLetter(song);
+                if (!grouped[letter]) grouped[letter] = [];
+                grouped[letter].push(song);
+            });
+            return grouped;
+        }
+
+        // 渲染歌单和导航栏
+        function renderSongs(groupedData) {
+            const container = document.getElementById('songList');
+            const navContainer = document.getElementById('alphabetNav');
+            container.innerHTML = '';
+            navContainer.innerHTML = '';
+
+            const sortedLetters = Object.keys(groupedData).sort();
+
+            sortedLetters.forEach(letter => {
+                // 字母分组隔断
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'group-title';
+                groupTitle.id = `group-${letter}`;
+                groupTitle.innerHTML = `<span class="letter">${letter}</span>`;
+                container.appendChild(groupTitle);
+
+                // 悬浮导航链接
+                const navLink = document.createElement('a');
+                navLink.href = `#group-${letter}`;
+                navLink.textContent = letter;
+                navLink.title = `跳转到 ${letter}`;
+                navContainer.appendChild(navLink);
+
+                // 歌曲渲染
+                groupedData[letter].forEach(song => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'song-item';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'song-name';
+                    nameSpan.textContent = song;
+                    nameSpan.title = song;
+
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.textContent = '复制';
+                    copyBtn.onclick = () => copyToClipboard(song);
+
+                    itemDiv.appendChild(nameSpan);
+                    itemDiv.appendChild(copyBtn);
+                    container.appendChild(itemDiv);
+                });
+            });
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast();
+                }).catch(err => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                alert('复制失败，请手动复制：' + text);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // 提示框
+        let toastTimeout;
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 初始化
+        window.onload = () => {
+            const groupedSongs = processSongs(rawData);
+            renderSongs(groupedSongs);
+            
+            // 滚动监听，高亮字母导航
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        const letter = id.replace('group-', '');
+                        document.querySelectorAll('.alphabet-nav a').forEach(a => {
+                            a.classList.remove('active');
+                            if(a.textContent === letter) a.classList.add('active');
+                        });
+                    }
+                });
+            }, { rootMargin: '-50px 0px -50% 0px' });
+
+            document.querySelectorAll('.group-title').forEach(title => {
+                observer.observe(title);
+            });
+        };
+    </script>
+</body>
+</html>
